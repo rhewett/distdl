@@ -7,7 +7,7 @@ on:
   push:
     branches: [ rhewett-branch-1 ]
   pull_request:
-    branches: [ master ]
+    branches: [ rhewett-branch-1 ]
 
 jobs:
   build:
