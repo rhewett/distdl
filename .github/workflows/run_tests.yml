@@ -17,6 +17,8 @@ jobs:
       matrix:
         python-version: ['3.6']
         mpi: ['mpich']
+        include:
+          toxenv: "py36"
 
     steps:
     - uses: actions/checkout@v2
@@ -31,3 +33,6 @@ jobs:
         lsb_release -a || true
         bash ci/travis-ci/install-mpi.sh ${{ matrix.mpi }}
         if [[ ${{ matrix.mpi }} == "mpich"   ]]; then mpichversion; fi
+    - name: Installation
+      run: |
+        tox -v -e ${{ matrix.toxenv }}
