@@ -18,7 +18,8 @@ jobs:
         python-version: ['3.6']
         mpi: ['mpich']
         include:
-          toxenv: py36
+          - python-version: '3.6'
+            toxenv: 'py36'
 
     steps:
     - uses: actions/checkout@v2
