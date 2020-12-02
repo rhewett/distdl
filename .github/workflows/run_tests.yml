@@ -13,6 +13,13 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    env:
+      LD_PRELOAD: /lib/x86_64-linux-gnu/libSegFault.so
+      SEGFAULT_SIGNALS: all
+      HYDRA_LAUNCHER: fork
+      OMPI_MCA_plm: isolated
+      OMPI_MCA_rmaps_base_oversubscribe: true
+      NP: 20
     strategy:
       matrix:
         python-version: ['3.6']
@@ -42,4 +49,4 @@ jobs:
         tox --version
     - name: Tests
       run: |
-        tox -e py36
+        tox -v -e py36
