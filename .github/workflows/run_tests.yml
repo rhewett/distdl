@@ -42,4 +42,4 @@ jobs:
         tox --version
     - name: Tests
       run: |
-        tox -v -e py36
+        tox -e py36
