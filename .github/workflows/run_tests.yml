@@ -19,7 +19,7 @@ jobs:
         mpi: ['mpich']
         include:
           - python-version: '3.6'
-            toxenv: 'py36'
+            toxenv: py36
 
     steps:
     - uses: actions/checkout@v2
@@ -42,4 +42,4 @@ jobs:
         tox --version
     - name: Tests
       run: |
-        tox -v -e ${{ matrix.toxenv }}
+        tox -v -e py36
