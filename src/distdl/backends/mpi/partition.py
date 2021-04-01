@@ -942,7 +942,7 @@ class MPICartesianPartition(MPIPartition):
         self.dim = len(self.shape)
         self.index = None
 
-    def create_cartesian_subtopology_partition(self, remain_shape):
+    def create_cartesian_subtopology_partition(self, remain_shape, preserve_partition_dimension=False):
         r"""Creates new partition with Cartesian topology in specific
         sub-dimensions.
 
@@ -957,6 +957,12 @@ class MPICartesianPartition(MPIPartition):
             Iterable containing boolean flags indicating if the dimension is
             to be preserved.
 
+        preserve_partition_dimension : Boolean
+            Keeps the overall partition dimension the same.  For example, 
+            consider a [3, 3, 4] partition, with `remain_shape = [False, True, False]`.
+            If `False`, the new partition's shape is `[3]` (following `MPI_Cart_sub`),
+            but if `True, the new partition's shape is `[1, 3, 1]`.
+
         Returns
         -------
         A new :any:`MPICartesianPartition` instance.
@@ -968,9 +974,28 @@ class MPICartesianPartition(MPIPartition):
             comm = self._comm.Sub(remain_shape)
             group = comm.Get_group()
 
-            return MPICartesianPartition(comm, group,
-                                         self._root,
-                                         self.shape[remain_shape])
+            P_sub = MPICartesianPartition(comm, group,
+                                          self._root,
+                                          self.shape[remain_shape])
+
+            # MPI_Cart_sub removes dimensions that are not preserved (where remain_shape is False).
+            # Sometimes we may want the new subpartitions to preserve that dimension (have length 1
+            # along it).  This requires creating the new partition, then adding those dims back in.
+            # If we don't want to preserve the dimension, just keep the standard MPI behavior.
+            if preserve_partition_dimension:
+                # The new partitions maintain the same dimensionality of the input partion
+                # but have shape 1 in the dimensions that are not kept.
+                new_shape = [self.shape[i] if remain_shape[i] else 1 for i in range(len(self.shape))]
+
+                # Create a reference to the old "new" subtopology, as we will need to deactivate this
+                # to release the resources.  Then, remap that subtopology to the new one, which inserts
+                # the preserved dimensions back in.  This should not impact the ordering of the ranks,
+                # as everything is preserved in lexicographic order.
+                P_sub_old = P_sub
+                P_sub = P_sub_old.create_cartesian_topology_partition(new_shape)
+                P_sub_old.deactivate()
+
+            return P_sub
 
         else:
             comm = MPI.COMM_NULL
